@@ -1,0 +1,103 @@
+# -------------------------
+
+# Python cache files
+
+# -------------------------
+
+**pycache**/
+*.py[cod]
+*$py.class
+
+# -------------------------
+
+# Virtual environments
+
+# -------------------------
+
+venv/
+.env/
+.venv/
+env/
+
+# -------------------------
+
+# Environment variables / API keys
+
+# -------------------------
+
+.env
+.env.local
+.env.example
+
+# -------------------------
+
+# Jupyter Notebook checkpoints
+
+# -------------------------
+
+.ipynb_checkpoints/
+
+# -------------------------
+
+# Logs
+
+# -------------------------
+
+*.log
+
+# -------------------------
+
+# OS files
+
+# -------------------------
+
+.DS_Store
+Thumbs.db
+
+# -------------------------
+
+# VS Code settings
+
+# -------------------------
+
+.vscode/
+
+# -------------------------
+
+# ML model files (optional if large)
+
+# -------------------------
+
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# -------------------------
+
+# Dataset files (optional if large)
+
+# -------------------------
+
+data/
+datasets/
+*.csv
+
+# -------------------------
+
+# Temporary files
+
+# -------------------------
+
+*.tmp
+*.temp
+
+# -------------------------
+
+# Build / dist
+
+# -------------------------
+
+build/
+dist/
+*.egg-info/

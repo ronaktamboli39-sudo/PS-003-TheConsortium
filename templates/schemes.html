@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Government Schemes — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🏛️ Government Scheme Finder</h1>
+  <p>Tell us about your farm — our AI will find every scheme you're eligible for</p>
+</div>
+
+<div class="form-page">
+  <form method="POST" class="main-form" id="schemeForm">
+
+    <div class="form-section">
+      <h3 class="form-section-title"><span class="section-num">01</span> Farm Details</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="farm_area">Farm Area (in acres)</label>
+          <input type="number" id="farm_area" name="farm_area" min="0.1" step="0.1" placeholder="e.g. 2.5" required />
+        </div>
+        <div class="form-group">
+          <label for="income">Annual Income (₹)</label>
+          <input type="number" id="income" name="income" min="0" placeholder="e.g. 60000" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="farmer_type">Farmer Type</label>
+          <select id="farmer_type" name="farmer_type" required>
+            <option value="">Select type…</option>
+            <option value="Small (1-2 acres)">Small (1–2 acres)</option>
+            <option value="Marginal (less than 1 acre)">Marginal (&lt;1 acre)</option>
+            <option value="Medium (2-10 acres)">Medium (2–10 acres)</option>
+            <option value="Large (more than 10 acres)">Large (&gt;10 acres)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="state">State</label>
+          <select id="state" name="state" required>
+            <option value="">Select state…</option>
+            {% for s in [
+              'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh',
+              'Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka',
+              'Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram',
+              'Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu',
+              'Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal',
+              'Delhi','Jammu & Kashmir','Ladakh'
+            ] %}
+              <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3 class="form-section-title"><span class="section-num">02</span> Personal Details</h3>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="caste">Caste Category</label>
+          <select id="caste" name="caste" required>
+            <option value="">Select category…</option>
+            <option value="General">General</option>
+            <option value="OBC (Other Backward Class)">OBC</option>
+            <option value="SC (Scheduled Caste)">SC</option>
+            <option value="ST (Scheduled Tribe)">ST</option>
+            <option value="EWS (Economically Weaker Section)">EWS</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Gender</label>
+          <div class="radio-group">
+            <label class="radio-card">
+              <input type="radio" name="gender" value="Male" required />
+              <span>👨 Male</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="gender" value="Female" />
+              <span>👩 Female</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="gender" value="Other" />
+              <span>🧑 Other</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-submit">
+      <button type="submit" class="btn btn-primary btn-lg" id="schemeSubmit">
+        <span id="schemeSubmitText">🏛️ Find My Eligible Schemes (AI)</span>
+      </button>
+      <p class="submit-note">AI analysis takes 20–40 seconds</p>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('schemeForm').addEventListener('submit', function() {
+  const btn = document.getElementById('schemeSubmit');
+  const txt = document.getElementById('schemeSubmitText');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> Searching schemes with AI...';
+});
+</script>
+{% endblock %}

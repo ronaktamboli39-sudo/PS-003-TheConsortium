@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Prediction Result — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🌾 Pest Prediction Result</h1>
+  <p>{{ crop }} — {{ location }}</p>
+  {% if from_history %}<span class="badge badge-history">📂 From History</span>{% endif %}
+</div>
+
+<!-- AUDIO CONTROLS -->
+<div class="audio-bar">
+  <span class="audio-label">🔊 Listen to AI Advisory</span>
+  <div class="audio-controls">
+    <button class="btn-audio" id="playBtn" onclick="toggleAudio()">▶ Play</button>
+    <button class="btn-audio" id="pauseBtn" onclick="pauseAudio()" style="display:none">⏸ Pause</button>
+    <button class="btn-audio btn-audio-stop" onclick="stopAudio()">⏹ Stop</button>
+    <select id="langSelect" class="audio-select" onchange="changeVoice()">
+      <option value="en">English</option>
+      <option value="hi">Hindi (हिंदी)</option>
+    </select>
+  </div>
+  <div class="audio-progress" id="audioProgress">
+    <div class="audio-progress-bar" id="audioProgressBar"></div>
+  </div>
+</div>
+
+<!-- WEATHER SUMMARY -->
+{% if weather %}
+<section class="result-section">
+  <h2 class="result-section-title">🌦️ Weather at {{ location }}</h2>
+
+  <!-- Current weather -->
+  <div class="weather-current-grid">
+    <div class="wc-card">
+      <div class="wc-val">{{ weather.current.temp }}°C</div>
+      <div class="wc-key">🌡️ Temperature</div>
+    </div>
+    <div class="wc-card">
+      <div class="wc-val">{{ weather.current.humidity }}%</div>
+      <div class="wc-key">💧 Humidity</div>
+    </div>
+    <div class="wc-card">
+      <div class="wc-val">{{ weather.current.precip }} mm</div>
+      <div class="wc-key">🌧️ Precipitation</div>
+    </div>
+    <div class="wc-card">
+      <div class="wc-val">{{ weather.current.wind }} km/h</div>
+      <div class="wc-key">💨 Wind</div>
+    </div>
+    <div class="wc-card wc-condition">
+      <div class="wc-val wc-val-sm">{{ weather.current.condition }}</div>
+      <div class="wc-key">🌤️ Condition</div>
+    </div>
+  </div>
+
+  <!-- Day-by-day forecast -->
+  <div class="forecast-scroll">
+    {% for day in weather.daily %}
+    <div class="forecast-card">
+      <div class="fc-date">{{ day.date }}</div>
+      <div class="fc-condition">{{ day.condition }}</div>
+      <div class="fc-temps">{{ day.max_temp }}° / {{ day.min_temp }}°C</div>
+      <div class="fc-rain">🌧️ {{ day.rain_prob }}%</div>
+      <div class="fc-wind">💨 {{ day.wind }} km/h</div>
+      <div class="fc-precip">💦 {{ day.precip }} mm</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- AI PREDICTION -->
+<section class="result-section" id="aiResultSection">
+  <h2 class="result-section-title">🤖 AI Pest Analysis — {{ crop }}</h2>
+  <div class="ai-result" id="aiResult">
+    {{ ai_prediction | replace('##', '<h3 class="ai-heading">') | replace('\n', '</h3>\n', 1) }}
+    <div class="ai-content" id="aiContent">
+      {{ ai_prediction | safe }}
+    </div>
+  </div>
+</section>
+
+<div class="result-actions">
+  {% if not from_history %}
+    <a href="{{ url_for('history') }}" class="btn btn-outline">📋 View History</a>
+  {% endif %}
+  <a href="{{ url_for('pest_prediction') }}" class="btn btn-primary">🔄 New Prediction</a>
+</div>
+
+<!-- Hidden text for TTS -->
+<div id="ttsText" style="display:none">{{ ai_prediction }}</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ===================== MARKDOWN → HTML ==========================
+function renderMarkdown(text) {
+  const el = document.getElementById('aiContent');
+  let html = text;
+  // Headers
+  html = html.replace(/^## (.+)$/gm, '<h3 class="ai-heading">$1</h3>');
+  html = html.replace(/^### (.+)$/gm, '<h4 class="ai-sub-heading">$1</h4>');
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Bullets
+  html = html.replace(/^[-•*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  // Paragraphs (blank line separated)
+  html = html.split('\n\n').map(p => {
+    if (p.startsWith('<h') || p.startsWith('<ul')) return p;
+    return `<p>${p.replace(/\n/g, ' ')}</p>`;
+  }).join('\n');
+  el.innerHTML = html;
+}
+renderMarkdown(document.getElementById('ttsText').textContent);
+
+// ===================== AUDIO / TTS ==============================
+let utterance = null;
+let speaking   = false;
+
+function getTextChunks() {
+  return document.getElementById('ttsText').textContent.trim();
+}
+
+function toggleAudio() {
+  if (speaking) {
+    window.speechSynthesis.resume();
+    document.getElementById('playBtn').style.display  = 'none';
+    document.getElementById('pauseBtn').style.display = 'inline-block';
+    return;
+  }
+  startAudio();
+}
+
+function startAudio() {
+  stopAudio();
+  const text = getTextChunks();
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate  = 0.9;
+  utterance.pitch = 1.0;
+  utterance.lang  = document.getElementById('langSelect').value === 'hi' ? 'hi-IN' : 'en-IN';
+
+  // Voice selection
+  const voices = window.speechSynthesis.getVoices();
+  const lang   = utterance.lang;
+  const match  = voices.find(v => v.lang === lang || v.lang.startsWith(lang.split('-')[0]));
+  if (match) utterance.voice = match;
+
+  utterance.onstart = () => {
+    speaking = true;
+    document.getElementById('playBtn').style.display  = 'none';
+    document.getElementById('pauseBtn').style.display = 'inline-block';
+  };
+  utterance.onend = () => {
+    speaking = false;
+    document.getElementById('playBtn').style.display  = 'inline-block';
+    document.getElementById('pauseBtn').style.display = 'none';
+    document.getElementById('audioProgressBar').style.width = '100%';
+    setTimeout(() => { document.getElementById('audioProgressBar').style.width = '0'; }, 1000);
+  };
+  utterance.onerror = () => {
+    speaking = false;
+    document.getElementById('playBtn').style.display  = 'inline-block';
+    document.getElementById('pauseBtn').style.display = 'none';
+  };
+  window.speechSynthesis.speak(utterance);
+
+  // Simulate progress bar (TTS doesn't expose real progress easily)
+  let prog = 0;
+  const dur = (text.length / 15) * 1000; // rough ms
+  const interval = setInterval(() => {
+    if (!speaking) { clearInterval(interval); return; }
+    prog = Math.min(prog + (100 / (dur / 200)), 99);
+    document.getElementById('audioProgressBar').style.width = prog + '%';
+  }, 200);
+}
+
+function pauseAudio() {
+  window.speechSynthesis.pause();
+  document.getElementById('playBtn').style.display  = 'inline-block';
+  document.getElementById('pauseBtn').style.display = 'none';
+}
+
+function stopAudio() {
+  window.speechSynthesis.cancel();
+  speaking = false;
+  document.getElementById('playBtn').style.display  = 'inline-block';
+  document.getElementById('pauseBtn').style.display = 'none';
+  document.getElementById('audioProgressBar').style.width = '0';
+}
+
+function changeVoice() {
+  if (speaking) { stopAudio(); setTimeout(startAudio, 300); }
+}
+
+// Load voices
+window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
+</script>
+{% endblock %}

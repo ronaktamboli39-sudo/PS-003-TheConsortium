@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Eligible Government Schemes — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🏛️ Your Eligible Government Schemes</h1>
+  <p>Based on your profile — {{ profile.state }} | {{ profile.farmer_type }} | {{ profile.caste }}</p>
+</div>
+
+<!-- PROFILE SUMMARY -->
+<div class="profile-strip">
+  <div class="ps-item"><span class="ps-icon">🌾</span><span>{{ profile.farm_area }} acres</span></div>
+  <div class="ps-item"><span class="ps-icon">💰</span><span>₹{{ profile.income }}/yr</span></div>
+  <div class="ps-item"><span class="ps-icon">📍</span><span>{{ profile.state }}</span></div>
+  <div class="ps-item"><span class="ps-icon">👤</span><span>{{ profile.caste }}</span></div>
+  <div class="ps-item"><span class="ps-icon">⚧️</span><span>{{ profile.gender }}</span></div>
+</div>
+
+<!-- AUDIO BAR -->
+<div class="audio-bar">
+  <span class="audio-label">🔊 Listen to Scheme Details</span>
+  <div class="audio-controls">
+    <button class="btn-audio" id="playBtn" onclick="toggleAudio()">▶ Play</button>
+    <button class="btn-audio" id="pauseBtn" onclick="pauseAudio()" style="display:none">⏸ Pause</button>
+    <button class="btn-audio btn-audio-stop" onclick="stopAudio()">⏹ Stop</button>
+  </div>
+</div>
+
+{% if schemes %}
+  <div class="scheme-count">
+    Found <strong>{{ schemes | length }}</strong> schemes you may be eligible for
+  </div>
+  <div class="schemes-grid">
+    {% for scheme in schemes %}
+    <div class="scheme-card">
+      <div class="sc-badge">Scheme {{ loop.index }}</div>
+      <h3 class="sc-name">{{ scheme.name }}</h3>
+      <p class="sc-desc">{{ scheme.description }}</p>
+
+      {% if scheme.benefits %}
+      <div class="sc-benefits">
+        <div class="sc-benefits-title">Key Benefits</div>
+        <div class="sc-benefits-text">{{ scheme.benefits }}</div>
+      </div>
+      {% endif %}
+
+      {% if scheme.reason %}
+      <div class="sc-eligibility">
+        <span class="sc-elig-icon">✅</span>
+        <span>{{ scheme.reason }}</span>
+      </div>
+      {% endif %}
+
+      {% if scheme.link and scheme.link not in ['N/A', 'n/a', '', 'Not Available'] %}
+      <a href="{{ scheme.link }}" target="_blank" rel="noopener" class="btn btn-scheme">
+        Apply Now →
+      </a>
+      {% else %}
+      <a href="https://pmkisan.gov.in" target="_blank" rel="noopener" class="btn btn-scheme">
+        Visit Portal →
+      </a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+{% else %}
+  <!-- Fallback: Show raw AI text if parsing produced no cards -->
+  <div class="ai-result">
+    <div class="ai-content" id="aiContent">{{ raw_text | safe }}</div>
+  </div>
+{% endif %}
+
+<div class="result-actions">
+  <a href="{{ url_for('schemes') }}" class="btn btn-outline">🔄 Search Again</a>
+</div>
+
+<!-- Hidden TTS text -->
+<div id="ttsText" style="display:none">{{ raw_text }}</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Render basic markdown in fallback view
+(function(){
+  const el = document.getElementById('aiContent');
+  if (!el) return;
+  let html = el.textContent;
+  html = html.replace(/^## (.+)$/gm, '<h3 class="ai-heading">$1</h3>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/^[-•*] (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+  el.innerHTML = html;
+})();
+
+// ===== TTS =====
+let speaking = false;
+let utterance = null;
+
+function toggleAudio() {
+  if (speaking) { window.speechSynthesis.resume(); return; }
+  startAudio();
+}
+function startAudio() {
+  stopAudio();
+  const text = document.getElementById('ttsText').textContent.trim();
+  utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-IN';
+  utterance.rate = 0.9;
+  const voices = window.speechSynthesis.getVoices();
+  const match = voices.find(v => v.lang.startsWith('en'));
+  if (match) utterance.voice = match;
+  utterance.onstart = () => { speaking = true; document.getElementById('playBtn').style.display='none'; document.getElementById('pauseBtn').style.display='inline-block'; };
+  utterance.onend  = () => { speaking = false; document.getElementById('playBtn').style.display='inline-block'; document.getElementById('pauseBtn').style.display='none'; };
+  utterance.onerror = () => { speaking = false; document.getElementById('playBtn').style.display='inline-block'; document.getElementById('pauseBtn').style.display='none'; };
+  window.speechSynthesis.speak(utterance);
+}
+function pauseAudio() { window.speechSynthesis.pause(); document.getElementById('playBtn').style.display='inline-block'; document.getElementById('pauseBtn').style.display='none'; }
+function stopAudio() { window.speechSynthesis.cancel(); speaking = false; document.getElementById('playBtn').style.display='inline-block'; document.getElementById('pauseBtn').style.display='none'; }
+window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+</script>
+{% endblock %}

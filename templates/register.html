@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Register — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon">🌱</div>
+      <h2>Create Account</h2>
+      <p>Join thousands of farmers using FarmWise AI</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Ramesh Kumar" required />
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Min 6 characters" required />
+      </div>
+      <div class="form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    </div>
+  </div>
+
+  <div class="auth-illustration">
+    <div class="auth-crop-grid">
+      <span>🌾</span><span>🌽</span><span>🍅</span>
+      <span>🌻</span><span>🥔</span><span>🫘</span>
+      <span>🌿</span><span>🌱</span><span>🍃</span>
+    </div>
+    <div class="auth-quote">
+      <blockquote>"The farmer is the only man in our economy who buys everything at retail and sells at wholesale."</blockquote>
+    </div>
+  </div>
+</div>
+{% endblock %}

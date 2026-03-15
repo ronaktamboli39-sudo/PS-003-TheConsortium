@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Login — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon">👨‍🌾</div>
+      <h2>Welcome Back</h2>
+      <p>Login to your FarmWise account</p>
+    </div>
+
+    <form method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" placeholder="your@email.com" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Login</button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+    </div>
+  </div>
+
+  <div class="auth-illustration">
+    <div class="auth-crop-grid">
+      <span>🌾</span><span>🌽</span><span>🍅</span>
+      <span>🌻</span><span>🥔</span><span>🫘</span>
+      <span>🌿</span><span>🌱</span><span>🍃</span>
+    </div>
+    <div class="auth-quote">
+      <blockquote>"Farming is a profession of hope."</blockquote>
+    </div>
+  </div>
+</div>
+{% endblock %}

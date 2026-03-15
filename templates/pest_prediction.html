@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Pest Prediction — FarmWise AI{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>🐛 Pest Prediction</h1>
+  <p>Select your crop and detect your location for an AI-powered 7-day pest forecast</p>
+</div>
+
+<div class="form-page">
+  <form method="POST" class="main-form" id="pestForm">
+
+    <!-- CROP SELECTION -->
+    <div class="form-section">
+      <h3 class="form-section-title">
+        <span class="section-num">01</span> Select Your Crop
+      </h3>
+      <div class="crop-grid" id="cropGrid">
+        {% set crops = [
+          ('Rice',      '🌾'),
+          ('Wheat',     '🌾'),
+          ('Maize',     '🌽'),
+          ('Cotton',    '🪴'),
+          ('Sugarcane', '🎋'),
+          ('Soybean',   '🫘'),
+          ('Mustard',   '🌼'),
+          ('Potato',    '🥔'),
+          ('Tomato',    '🍅'),
+          ('Groundnut', '🥜'),
+        ] %}
+        {% for crop_name, crop_emoji in crops %}
+          <label class="crop-card">
+            <input type="radio" name="crop" value="{{ crop_name }}" required />
+            <div class="crop-card-inner">
+              <span class="crop-emoji">{{ crop_emoji }}</span>
+              <span class="crop-name">{{ crop_name }}</span>
+            </div>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- LOCATION -->
+    <div class="form-section">
+      <h3 class="form-section-title">
+        <span class="section-num">02</span> Your Location
+      </h3>
+      <div class="location-box">
+        <div class="location-display" id="locationDisplay">
+          <span class="loc-icon">📍</span>
+          <span id="locationText">Location not detected yet</span>
+        </div>
+        <button type="button" class="btn btn-detect" id="detectBtn" onclick="detectLocation()">
+          <span id="detectBtnText">📡 Detect My Location</span>
+        </button>
+        <input type="hidden" name="location" id="locationInput" />
+        <input type="hidden" name="lat"      id="latInput" />
+        <input type="hidden" name="lon"      id="lonInput" />
+      </div>
+      <div class="weather-preview" id="weatherPreview" style="display:none;">
+        <div class="wp-title">🌦️ Current Weather at Your Location</div>
+        <div class="wp-grid" id="wpGrid"></div>
+      </div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="form-submit">
+      <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+        <span id="submitText">🔍 Predict Pest Risk (AI)</span>
+      </button>
+      <p class="submit-note">Analysis takes 15–30 seconds via Sarvam.ai</p>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function detectLocation() {
+  const btn = document.getElementById('detectBtn');
+  const btnText = document.getElementById('detectBtnText');
+  const locText = document.getElementById('locationText');
+  const locDisplay = document.getElementById('locationDisplay');
+
+  if (!navigator.geolocation) {
+    alert('Geolocation is not supported by your browser.');
+    return;
+  }
+
+  btnText.textContent = '⏳ Detecting...';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lon = pos.coords.longitude.toFixed(6);
+
+      // Reverse geocode
+      try {
+        const geoRes = await fetch(`/api/reverse-geocode?lat=${lat}&lon=${lon}`);
+        const geoData = await geoRes.json();
+        const locationName = geoData.location || `${lat}, ${lon}`;
+
+        document.getElementById('locationInput').value = locationName;
+        document.getElementById('latInput').value = lat;
+        document.getElementById('lonInput').value = lon;
+        locText.textContent = locationName;
+        locDisplay.classList.add('detected');
+        btnText.textContent = '✅ Location Detected';
+
+        // Fetch weather preview
+        fetchWeatherPreview(lat, lon);
+      } catch (e) {
+        locText.textContent = `${lat}, ${lon}`;
+        document.getElementById('locationInput').value = `${lat}, ${lon}`;
+        document.getElementById('latInput').value = lat;
+        document.getElementById('lonInput').value = lon;
+        btnText.textContent = '✅ Location Set';
+      }
+      btn.disabled = false;
+    },
+    (err) => {
+      alert('Could not detect location: ' + err.message);
+      btnText.textContent = '📡 Detect My Location';
+      btn.disabled = false;
+    }
+  );
+}
+
+async function fetchWeatherPreview(lat, lon) {
+  try {
+    const res = await fetch(`/api/weather?lat=${lat}&lon=${lon}`);
+    if (!res.ok) throw new Error('Weather unavailable');
+    const data = await res.json();
+    const c = data.current || {};
+
+    const wpGrid = document.getElementById('wpGrid');
+    wpGrid.innerHTML = `
+      <div class="wp-item"><div class="wp-val">🌡️ ${c.temp ?? 'N/A'}°C</div><div class="wp-key">Temperature</div></div>
+      <div class="wp-item"><div class="wp-val">💧 ${c.humidity ?? 'N/A'}%</div><div class="wp-key">Humidity</div></div>
+      <div class="wp-item"><div class="wp-val">🌧️ ${c.precip ?? 0} mm</div><div class="wp-key">Precipitation</div></div>
+      <div class="wp-item"><div class="wp-val">💨 ${c.wind ?? 'N/A'} km/h</div><div class="wp-key">Wind Speed</div></div>
+    `;
+    if (c.condition) {
+      const condEl = document.createElement('div');
+      condEl.className = 'wp-condition';
+      condEl.textContent = c.condition;
+      document.getElementById('wpGrid').after(condEl);
+    }
+    document.getElementById('weatherPreview').style.display = 'block';
+  } catch(e) {
+    console.warn('Weather preview unavailable:', e.message);
+  }
+}
+
+// Show loading on form submit
+document.getElementById('pestForm').addEventListener('submit', function(e) {
+  const location = document.getElementById('locationInput').value;
+  const crop = document.querySelector('input[name="crop"]:checked');
+  if (!crop) { e.preventDefault(); alert('Please select a crop.'); return; }
+  if (!location) { e.preventDefault(); alert('Please detect your location first.'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  const txt = document.getElementById('submitText');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> Analyzing with AI...';
+});
+</script>
+{% endblock %}

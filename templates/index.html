@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}FarmWise AI — Smart Farming Assistant{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg-pattern"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🇮🇳 Built for Indian Farmers</div>
+    <h1 class="hero-title">
+      Farm Smarter,<br/>
+      <span class="hero-accent">Harvest Better</span>
+    </h1>
+    <p class="hero-subtitle">
+      AI-powered pest predictions, weather insights, and government scheme
+      discovery — all in one place. Speak to it. Listen to it. Farm with confidence.
+    </p>
+
+    <div class="hero-actions">
+      {% if session.user_id %}
+        <a href="{{ url_for('pest_prediction') }}" class="hero-btn primary">
+          <span class="btn-icon">🐛</span>
+          <div>
+            <div class="btn-title">Pest Prediction</div>
+            <div class="btn-sub">AI-powered 7-day forecast</div>
+          </div>
+        </a>
+        <a href="{{ url_for('schemes') }}" class="hero-btn secondary">
+          <span class="btn-icon">🏛️</span>
+          <div>
+            <div class="btn-title">Government Schemes</div>
+            <div class="btn-sub">Find schemes you qualify for</div>
+          </div>
+        </a>
+      {% else %}
+        <a href="{{ url_for('login') }}?next={{ url_for('pest_prediction') }}" class="hero-btn primary">
+          <span class="btn-icon">🐛</span>
+          <div>
+            <div class="btn-title">Pest Prediction</div>
+            <div class="btn-sub">Login to get started</div>
+          </div>
+        </a>
+        <a href="{{ url_for('login') }}?next={{ url_for('schemes') }}" class="hero-btn secondary">
+          <span class="btn-icon">🏛️</span>
+          <div>
+            <div class="btn-title">Government Schemes</div>
+            <div class="btn-sub">Login to discover benefits</div>
+          </div>
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Floating crops -->
+  <div class="hero-visual">
+    <div class="crop-orbit">
+      <div class="crop-item" style="--i:0">🌾</div>
+      <div class="crop-item" style="--i:1">🌽</div>
+      <div class="crop-item" style="--i:2">🍅</div>
+      <div class="crop-item" style="--i:3">🥔</div>
+      <div class="crop-item" style="--i:4">🫘</div>
+      <div class="crop-item" style="--i:5">🌱</div>
+    </div>
+    <div class="orbit-center">🌿</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <h2 class="section-title">Why FarmWise AI?</h2>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🌦️</div>
+      <h3>Real-Time Weather</h3>
+      <p>7-day forecasts with temperature, humidity, rainfall, and wind data — fetched live for your location.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>AI by Groq + Llama 3.3</h3>
+      <p>Groq's blazing-fast inference with Llama 3.3-70B analyses your crop and local weather to predict pest attacks before they happen.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🏛️</div>
+      <h3>Scheme Discovery</h3>
+      <p>Instantly discover government subsidies and schemes you qualify for based on your farm profile.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔊</div>
+      <h3>Audio Read-Aloud</h3>
+      <p>Can't read on the go? Hit the Listen button and have the AI advisory read aloud to you.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📍</div>
+      <h3>Location-Aware</h3>
+      <p>One click detects your exact location for hyper-local pest and weather predictions.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📋</div>
+      <h3>Prediction History</h3>
+      <p>All your past predictions saved securely so you can track patterns season after season.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS STRIP -->
+<section class="stats-strip">
+  <div class="stat-item"><span class="stat-num">10+</span><span class="stat-label">Crops Supported</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat-item"><span class="stat-num">5-Day</span><span class="stat-label">OWM Forecast</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat-item"><span class="stat-num">50+</span><span class="stat-label">Gov Schemes Found</span></div>
+  <div class="stat-divider"></div>
+  <div class="stat-item"><span class="stat-num">Groq</span><span class="stat-label">Lightning AI</span></div>
+</section>
+{% endblock %}
