@@ -1,4 +1,5 @@
 # 🌾 FarmWise AI — Smart Farming Assistant
+live link https://ps-003-theconsortium.onrender.com
 
 > AI-powered pest prediction, government scheme discovery, and audio read-aloud for Indian farmers.
 > Built with **Flask + Groq (Llama 3.3) + OpenWeatherMap**.
